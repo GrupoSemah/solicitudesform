@@ -60,11 +60,9 @@ export const AuthorizedPersons = ({ register, errors }) => {
                         {...register(
                             "email1",
                             {
+                                required: true,
                                 pattern:
                                     /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i
-                            },
-                            {
-                                required: true
                             }
                         )}
                         className={`border border-gray-300 px-4 py-2 rounded-md w-full ${

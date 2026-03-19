@@ -46,9 +46,8 @@ export const JudicialProcess = ({ register, judicial, setJudicial }) => {
                         <input
                             type="text"
                             id="nombredemandante"
-                            {...register("nombredemandante")}
+                            {...register("nombredemandante", { required: true })}
                             className="border border-gray-300 px-4 py-2 rounded-md w-full"
-                            required
                         />
                     </div>
                     <div>
@@ -61,9 +60,8 @@ export const JudicialProcess = ({ register, judicial, setJudicial }) => {
                         <input
                             type="text"
                             id="direcciondemandante"
-                            {...register("direcciondemandante")}
+                            {...register("direcciondemandante", { required: true })}
                             className="border border-gray-300 px-4 py-2 rounded-md w-full"
-                            required
                         />
                     </div>
                     <div>
@@ -76,9 +74,8 @@ export const JudicialProcess = ({ register, judicial, setJudicial }) => {
                         <input
                             type="text"
                             id="telefonodemandante"
-                            {...register("telefonodemandante")}
+                            {...register("telefonodemandante", { required: true })}
                             className="border border-gray-300 px-4 py-2 rounded-md w-full"
-                            required
                         />
                     </div>
                 </>
