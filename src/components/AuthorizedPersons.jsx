@@ -18,8 +18,9 @@ export const AuthorizedPersons = ({ register, errors }) => {
                         {...register("nombre1", {
                             required: true
                         })}
-                        className="border border-gray-300 px-4 py-2 rounded-md w-full"
+                        className={`border border-gray-300 px-4 py-2 rounded-md w-full ${errors.nombre1 ? "border-red-500" : ""}`}
                     />
+                    {errors.nombre1 && <p className="text-red-500 text-sm mt-1">Por favor ingrese el nombre</p>}
                 </div>
                 <div>
                     <label htmlFor="telefono1" className="block mb-2">
@@ -32,8 +33,9 @@ export const AuthorizedPersons = ({ register, errors }) => {
                         {...register("telefono1", {
                             required: true
                         })}
-                        className="border border-gray-300 px-4 py-2 rounded-md w-full"
+                        className={`border border-gray-300 px-4 py-2 rounded-md w-full ${errors.telefono1 ? "border-red-500" : ""}`}
                     />
+                    {errors.telefono1 && <p className="text-red-500 text-sm mt-1">Por favor ingrese el teléfono</p>}
                 </div>
                 <div>
                     <label htmlFor="mobile1" className="block mb-2">
@@ -46,8 +48,9 @@ export const AuthorizedPersons = ({ register, errors }) => {
                         {...register("mobile1", {
                             required: true
                         })}
-                        className="border border-gray-300 px-4 py-2 rounded-md w-full"
+                        className={`border border-gray-300 px-4 py-2 rounded-md w-full ${errors.mobile1 ? "border-red-500" : ""}`}
                     />
+                    {errors.mobile1 && <p className="text-red-500 text-sm mt-1">Por favor ingrese el mobile</p>}
                 </div>
                 <div>
                     <label htmlFor="email1" className="block mb-2">

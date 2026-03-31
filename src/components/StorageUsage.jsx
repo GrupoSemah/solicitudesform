@@ -1,5 +1,5 @@
 
-export const StorageUsage = ({ register }) => {
+export const StorageUsage = ({ register, errors }) => {
     return (
         <section>
             {/* Pregunta 1: Tipo de uso */}
@@ -32,6 +32,7 @@ export const StorageUsage = ({ register }) => {
                         </label>
                     </div>
                 </div>
+                {errors.tipoUso && <p className="text-red-500 text-sm mt-1 ml-4">Por favor seleccione una opción</p>}
             </div>
 
             {/* Pregunta 2: Tipo de bienes */}
@@ -97,6 +98,7 @@ export const StorageUsage = ({ register }) => {
                         </label>
                     </div>
                 </div>
+                {errors.tipoBienes && <p className="text-red-500 text-sm mt-1 ml-4">Por favor seleccione una opción</p>}
             </div>
 
             {/* Pregunta 3: Procedencia de bienes */}
@@ -129,6 +131,7 @@ export const StorageUsage = ({ register }) => {
                         </label>
                     </div>
                 </div>
+                {errors.procedenciaBienes && <p className="text-red-500 text-sm mt-1 ml-4">Por favor seleccione una opción</p>}
             </div>
         </section>
     );

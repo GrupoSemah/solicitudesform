@@ -16,19 +16,54 @@ export const AlmaForm = () => {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm()
+  } = useForm({ mode: 'onBlur' })
   const [persona, setPersona] = useState("natural")
   const [judicial, setJudicial] = useState("no")
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
+
+  // Al cambiar de tipo de persona, limpia los campos del tipo anterior
+  // para evitar que datos residuales pasen la validación del backend
+  const handlePersonaChange = (tipo) => {
+    if (tipo === "juridica") {
+      setValue("correo", "")
+      setValue("confirmeemail", "")
+      setValue("nombrenatural", "")
+      setValue("apellido", "")
+      setValue("cedula", "")
+    } else {
+      setValue("correojuridico", "")
+      setValue("confirmeemailjuridico", "")
+      setValue("compania", "")
+      setValue("ruc", "")
+      setValue("dv", "")
+      setValue("representante", "")
+      setValue("cedularepresentante", "")
+    }
+    setPersona(tipo)
+  }
 
   const onSubmit = async (data) => {
-    // Enviar email con EmailJS
-    sendCustomEmail(data, judicial)
-    
-    // Enviar datos al CRM Tracker (en paralelo, no bloquea)
-    sendToCRMTracker(data)
-    
-    setIsSubmitted(true)
+    setIsLoading(true)
+    setSubmitError(null)
+
+    try {
+      // 1. Primero registrar en el CRM (validación backend)
+      await sendToCRMTracker(data)
+
+      // 2. Solo si el CRM acepta, enviar notificación por email
+      await sendCustomEmail(data, judicial)
+
+      // 3. Todo OK → mostrar pantalla de éxito
+      setIsSubmitted(true)
+    } catch (error) {
+      const mensaje = error instanceof Error ? error.message : "Error desconocido"
+      console.error("❌ Error al enviar solicitud:", mensaje)
+      setSubmitError(mensaje)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -44,11 +79,16 @@ export const AlmaForm = () => {
 
             <hr className="my-5" />
 
-            <StorageUsage register={register} />
+            <StorageUsage register={register} errors={errors} />
 
             <hr className="my-5" />
 
-            <PersonalInfo register={register} errors={errors} persona={persona} setPersona={setPersona} />
+            <PersonalInfo
+              register={register}
+              errors={errors}
+              persona={persona}
+              setPersona={handlePersonaChange}
+            />
 
             <hr className="my-5" />
 
@@ -60,13 +100,21 @@ export const AlmaForm = () => {
 
             <JudicialProcess register={register} judicial={judicial} setJudicial={setJudicial} />
 
+            {/* Mensaje de error al enviar */}
+            {submitError && (
+              <div className="mx-4 mb-4 p-4 bg-red-50 border border-red-300 rounded-md">
+                <p className="text-red-700 text-sm font-medium whitespace-pre-line">⚠️ {submitError}</p>
+              </div>
+            )}
+
             <section>
               <div className="flex justify-center">
                 <button
                   type="submit"
-                  className="bg-orange-600 text-white text-2xl px-2 py-2 rounded-md my-5 w-64 lg:96"
+                  disabled={isLoading}
+                  className="bg-orange-600 text-white text-2xl px-2 py-2 rounded-md my-5 w-64 lg:96 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Enviar
+                  {isLoading ? "Enviando..." : "Enviar"}
                 </button>
               </div>
             </section>
@@ -76,4 +124,3 @@ export const AlmaForm = () => {
     </>
   )
 }
-

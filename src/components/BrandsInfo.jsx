@@ -1,4 +1,4 @@
-export const BrandsInfo = ({ register, setValue }) => {
+export const BrandsInfo = ({ register, errors, setValue }) => {
   const handleSelectChange = (event) => {
     const selectedSucursal = event.target.value
     const sucursalEmails = {
@@ -60,7 +60,7 @@ export const BrandsInfo = ({ register, setValue }) => {
           id="sucursales"
           {...register("sucursales", { required: true })}
           onChange={handleSelectChange}
-          className="border border-gray-300 px-4 py-2 rounded-md w-full"
+          className={`border border-gray-300 px-4 py-2 rounded-md w-full ${errors.sucursales ? "border-red-500" : ""}`}
         >
           <option value="">Seleccione:</option>
           <option value="Milla 8">Milla 8</option>
@@ -75,6 +75,7 @@ export const BrandsInfo = ({ register, setValue }) => {
           <option value="Hato Montaña">Hato Montaña</option>
           <option value="Tumba Muerto">Tumba Muerto</option>
         </select>
+        {errors.sucursales && <p className="text-red-500 text-sm mt-1">Por favor seleccione una sucursal</p>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -86,13 +87,14 @@ export const BrandsInfo = ({ register, setValue }) => {
           <select
             id="razonprincipal"
             {...register("razonprincipal", { required: true })}
-            className="border border-gray-300 px-4 py-2 rounded-md w-full"
+            className={`border border-gray-300 px-4 py-2 rounded-md w-full ${errors.razonprincipal ? "border-red-500" : ""}`}
           >
             <option value="">Seleccione:</option>
             <option value="Guardar temporalmente (Por remodelación del inmueble o en espera de entrega de inmueble)">Guardar temporalmente (Por remodelación del inmueble o en espera de entrega de inmueble)</option>
             <option value="Guardar temporalmente hasta vender, regalar o eliminar">Guardar temporalmente hasta vender, regalar o eliminar</option>
             <option value="Guardar por tiempo indefinido">Guardar por tiempo indefinido</option>
           </select>
+          {errors.razonprincipal && <p className="text-red-500 text-sm mt-1">Por favor seleccione una razón</p>}
         </div>
 
         <div className="mb-4">
@@ -103,13 +105,14 @@ export const BrandsInfo = ({ register, setValue }) => {
           <select
             id="tiempodesocupar"
             {...register("tiempodesocupar", { required: true })}
-            className="border border-gray-300 px-4 py-2 rounded-md w-full"
+            className={`border border-gray-300 px-4 py-2 rounded-md w-full ${errors.tiempodesocupar ? "border-red-500" : ""}`}
           >
             <option value="">Seleccione:</option>
             <option value="Entre 1 y 6 meses">Entre 1 y 6 meses</option>
             <option value="Entre 7 y 12 meses">Entre 7 y 12 meses</option>
             <option value="En más de 12 meses">En más de 12 meses</option>
           </select>
+          {errors.tiempodesocupar && <p className="text-red-500 text-sm mt-1">Por favor seleccione un tiempo estimado</p>}
         </div>
       </div>
     </section>
