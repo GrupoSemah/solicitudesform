@@ -16,7 +16,7 @@ export const AlmaForm = () => {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm({ mode: 'onBlur' })
+  } = useForm({ mode: 'onBlur', shouldUnregister: true })
   const [persona, setPersona] = useState("natural")
   const [judicial, setJudicial] = useState("no")
   const [isSubmitted, setIsSubmitted] = useState(false)
