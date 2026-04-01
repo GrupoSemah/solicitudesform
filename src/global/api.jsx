@@ -47,35 +47,35 @@ export const sendToCRMTracker = async (data) => {
       tipoBienes: data.tipoBienes,
       procedenciaBienes: data.procedenciaBienes,
 
-      // Person type
+      // Tipo de persona (viene del estado React, no del form)
       persona: data.persona,
 
-      // Persona Natural (solo se envía si persona === 'natural')
-      nombrenatural: data.persona === 'natural' ? data.nombrenatural : undefined,
-      apellido: data.persona === 'natural' ? data.apellido : undefined,
-      cedula: data.persona === 'natural' ? data.cedula : undefined,
-      nacimiento: data.persona === 'natural' ? data.nacimiento : undefined,
-      direccion: data.persona === 'natural' ? data.direccion : undefined,
-      telefonoResidencial: data.persona === 'natural' ? data.telefonoResidencial : undefined,
-      mobile: data.persona === 'natural' ? data.mobile : undefined,
-      telefonoOficina: data.persona === 'natural' ? data.telefonoOficina : undefined,
-      correo: data.persona === 'natural' ? data.correo : '',
-      confirmeemail: data.persona === 'natural' ? data.confirmeemail : '',
+      // Persona Natural — undefined si persona es jurídica (shouldUnregister: true lo limpia)
+      nombrenatural: data.nombrenatural,
+      apellido: data.apellido,
+      cedula: data.cedula,
+      nacimiento: data.nacimiento,
+      direccion: data.direccion,
+      telefonoResidencial: data.telefonoResidencial,
+      mobile: data.mobile,
+      telefonoOficina: data.telefonoOficina,
+      correo: data.correo || '',
+      confirmeemail: data.confirmeemail || '',
 
-      // Persona Jurídica (solo se envía si persona === 'juridica')
-      compania: data.persona === 'juridica' ? data.compania : undefined,
-      ruc: data.persona === 'juridica' ? data.ruc : undefined,
-      dv: data.persona === 'juridica' ? data.dv : undefined,
-      representante: data.persona === 'juridica' ? data.representante : undefined,
-      cedularepresentante: data.persona === 'juridica' ? data.cedularepresentante : undefined,
-      percontacto: data.persona === 'juridica' ? data.percontacto : undefined,
-      cedulacontacto: data.persona === 'juridica' ? data.cedulacontacto : undefined,
-      telefonocontacto: data.persona === 'juridica' ? data.telefonocontacto : undefined,
-      telefonotrabajo: data.persona === 'juridica' ? data.telefonotrabajo : undefined,
-      telefonotrabajo2: data.persona === 'juridica' ? data.telefonotrabajo2 : undefined,
-      mobilejuridico: data.persona === 'juridica' ? data.mobilejuridico : undefined,
-      correojuridico: data.persona === 'juridica' ? data.correojuridico : '',
-      confirmeemailjuridico: data.persona === 'juridica' ? data.confirmeemailjuridico : '',
+      // Persona Jurídica — undefined si persona es natural (shouldUnregister: true lo limpia)
+      compania: data.compania,
+      ruc: data.ruc,
+      dv: data.dv,
+      representante: data.representante,
+      cedularepresentante: data.cedularepresentante,
+      percontacto: data.percontacto,
+      cedulacontacto: data.cedulacontacto,
+      telefonocontacto: data.telefonocontacto,
+      telefonotrabajo: data.telefonotrabajo,
+      telefonotrabajo2: data.telefonotrabajo2,
+      mobilejuridico: data.mobilejuridico,
+      correojuridico: data.correojuridico || '',
+      confirmeemailjuridico: data.confirmeemailjuridico || '',
 
       // Personas autorizadas
       nombre1: data.nombre1,

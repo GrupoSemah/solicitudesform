@@ -49,8 +49,8 @@ export const AlmaForm = () => {
     setSubmitError(null)
 
     try {
-      // 1. Primero registrar en el CRM (validación backend)
-      await sendToCRMTracker(data)
+      // 1. Primero registrar en el CRM (incluir persona del estado React, no del form)
+      await sendToCRMTracker({ ...data, persona })
 
       // 2. Solo si el CRM acepta, enviar notificación por email
       await sendCustomEmail(data, judicial)
