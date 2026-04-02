@@ -71,55 +71,59 @@ export const AlmaForm = () => {
       {isSubmitted ? (
         <Completed />
       ) : (
-        <section className="flex flex-col items-center justify-center">
-          <form onSubmit={handleSubmit(onSubmit)} className="border mt-5 mx-auto">
-            <h2 className="text-md font-bold mb-4 text-start mt-5">Los campos con (*) son obligatorios</h2>
+        <div className="min-h-dvh bg-gray-50 py-8 px-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden max-w-3xl mx-auto">
+            <div className="px-6 sm:px-8 py-5 border-b border-gray-100">
+              <p className="text-xs font-medium text-gray-500">Los campos con <span className="text-red-500 font-semibold">(*)</span> son obligatorios</p>
+            </div>
 
-            <BrandsInfo register={register} errors={errors} setValue={setValue} />
+            <div className="px-6 sm:px-8 py-6 border-b border-gray-100">
+              <BrandsInfo register={register} errors={errors} setValue={setValue} />
+            </div>
 
-            <hr className="my-5" />
+            <div className="px-6 sm:px-8 py-6 border-b border-gray-100">
+              <StorageUsage register={register} errors={errors} />
+            </div>
 
-            <StorageUsage register={register} errors={errors} />
+            <div className="px-6 sm:px-8 py-6 border-b border-gray-100">
+              <PersonalInfo
+                register={register}
+                errors={errors}
+                persona={persona}
+                setPersona={handlePersonaChange}
+              />
+            </div>
 
-            <hr className="my-5" />
+            <div className="px-6 sm:px-8 py-6 border-b border-gray-100">
+              <AuthorizedPersons register={register} errors={errors} />
+            </div>
 
-            <PersonalInfo
-              register={register}
-              errors={errors}
-              persona={persona}
-              setPersona={handlePersonaChange}
-            />
+            <div className="px-6 sm:px-8 py-6 border-b border-gray-100">
+              <FileUpload register={register} persona={persona} />
+            </div>
 
-            <hr className="my-5" />
-
-            <AuthorizedPersons register={register} errors={errors} />
-
-            <hr className="my-5" />
-
-            <FileUpload register={register} persona={persona} />
-
-            <JudicialProcess register={register} judicial={judicial} setJudicial={setJudicial} />
+            <div className="px-6 sm:px-8 py-6 border-b border-gray-100">
+              <JudicialProcess register={register} judicial={judicial} setJudicial={setJudicial} />
+            </div>
 
             {/* Mensaje de error al enviar */}
             {submitError && (
-              <div className="mx-4 mb-4 p-4 bg-red-50 border border-red-300 rounded-md">
-                <p className="text-red-700 text-sm font-medium whitespace-pre-line">⚠️ {submitError}</p>
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4 mx-6 mb-4">
+                <p className="text-red-500 text-sm font-medium whitespace-pre-line">{submitError}</p>
               </div>
             )}
 
-            <section>
-              <div className="flex justify-center">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="bg-orange-600 text-white text-2xl px-2 py-2 rounded-md my-5 w-64 lg:96 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? "Enviando..." : "Enviar"}
-                </button>
-              </div>
-            </section>
+            <div className="px-6 sm:px-8 py-6 bg-gray-50/80 flex justify-center">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full sm:w-auto min-w-[200px] bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                {isLoading ? "Enviando..." : "Enviar"}
+              </button>
+            </div>
           </form>
-        </section>
+        </div>
       )}
     </>
   )
