@@ -9,6 +9,7 @@ export const Nav = () => {
                     className="h-12 w-auto object-contain"
                 />
                 <h1 className="text-xl font-bold text-gray-800 tracking-tight">Solicitud de Depósito</h1>
+                <a href="#logs" className="text-xs text-gray-400 hover:text-orange-500 transition-colors">Ver logs</a>
             </div>
         </nav>
     );

@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { sendCustomEmail } from "../global/email"
 import { sendToCRMTracker } from "../global/api"
+import { saveLog, updateLog } from "../global/logging"
 import { Completed } from "./completed"
 import { BrandsInfo } from "./BrandsInfo"
 import { PersonalInfo } from "./PersonalInfo"
@@ -48,22 +49,52 @@ export const AlmaForm = () => {
     setIsLoading(true)
     setSubmitError(null)
 
+    const id = Date.now().toString()
+    const payload = { ...data, persona }
+
+    saveLog({
+      id,
+      timestamp: new Date().toISOString(),
+      formType: 'solicitud',
+      payload,
+      backendStatus: 'pending',
+      emailjsStatus: 'pending',
+      failedStep: null,
+      retryCount: 0,
+      errorMessage: null,
+    })
+
+    let backendOk = false
+
     try {
-      // 1. Primero registrar en el CRM (incluir persona del estado React, no del form)
-      await sendToCRMTracker({ ...data, persona })
-
-      // 2. Solo si el CRM acepta, enviar notificación por email
-      await sendCustomEmail(data, judicial)
-
-      // 3. Todo OK → mostrar pantalla de éxito
-      setIsSubmitted(true)
+      await sendToCRMTracker(payload)
+      updateLog(id, { backendStatus: 'success' })
+      backendOk = true
     } catch (error) {
       const mensaje = error instanceof Error ? error.message : "Error desconocido"
-      console.error("❌ Error al enviar solicitud:", mensaje)
+      console.error("❌ Error al registrar en CRM:", mensaje)
+      updateLog(id, { backendStatus: 'failed', failedStep: 'backend', errorMessage: mensaje })
       setSubmitError(mensaje)
-    } finally {
-      setIsLoading(false)
     }
+
+    try {
+      await sendCustomEmail(data, judicial)
+      updateLog(id, { emailjsStatus: 'success' })
+    } catch (error) {
+      const mensaje = error instanceof Error ? error.message : "Error al enviar email"
+      console.error("❌ Error en EmailJS:", mensaje)
+      updateLog(id, {
+        emailjsStatus: 'failed',
+        failedStep: backendOk ? 'emailjs' : 'both',
+        errorMessage: mensaje,
+      })
+    }
+
+    if (backendOk) {
+      setIsSubmitted(true)
+    }
+
+    setIsLoading(false)
   }
 
   return (
