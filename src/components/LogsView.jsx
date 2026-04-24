@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
 import { getLogs, updateLog, removeLog, clearSuccessfulLogs } from "../global/logging"
-import { sendToCRMTracker } from "../global/api"
 import { sendCustomEmail } from "../global/email"
 
 const STATUS_CLASS = {
@@ -31,35 +30,13 @@ export function LogsView() {
     return () => window.removeEventListener("focus", refresh)
   }, [refresh])
 
-  async function retryBackend(log) {
-    setRetrying(`${log.id}-backend`)
-    try {
-      await sendToCRMTracker(log.payload)
-      updateLog(log.id, {
-        backendStatus: "success",
-        failedStep: log.emailjsStatus === "success" ? null : "emailjs",
-        retryCount: (log.retryCount || 0) + 1,
-        lastRetryAt: new Date().toISOString(),
-      })
-    } catch (err) {
-      updateLog(log.id, {
-        backendStatus: "failed",
-        errorMessage: err instanceof Error ? err.message : "Error desconocido",
-        retryCount: (log.retryCount || 0) + 1,
-        lastRetryAt: new Date().toISOString(),
-      })
-    }
-    refresh()
-    setRetrying(null)
-  }
-
   async function retryEmailjs(log) {
     setRetrying(`${log.id}-emailjs`)
     try {
       await sendCustomEmail(log.payload, log.payload.judicial)
       updateLog(log.id, {
         emailjsStatus: "success",
-        failedStep: log.backendStatus === "success" ? null : "backend",
+        failedStep: null,
         retryCount: (log.retryCount || 0) + 1,
         lastRetryAt: new Date().toISOString(),
       })
@@ -132,25 +109,12 @@ export function LogsView() {
 
                   <div className="flex flex-wrap gap-3 shrink-0">
                     <div className="flex flex-col items-start gap-1">
-                      <span className="text-xs text-gray-400">Backend</span>
-                      <StatusBadge status={log.backendStatus} />
-                    </div>
-                    <div className="flex flex-col items-start gap-1">
                       <span className="text-xs text-gray-400">EmailJS</span>
                       <StatusBadge status={log.emailjsStatus} />
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2 shrink-0">
-                    {log.backendStatus === "failed" && (
-                      <button
-                        onClick={() => retryBackend(log)}
-                        disabled={retrying === `${log.id}-backend`}
-                        className="text-xs bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
-                      >
-                        {retrying === `${log.id}-backend` ? "Enviando..." : "Reenviar Backend"}
-                      </button>
-                    )}
                     {log.emailjsStatus === "failed" && (
                       <button
                         onClick={() => retryEmailjs(log)}

@@ -35,8 +35,6 @@ export function removeLog(id) {
 
 export function clearSuccessfulLogs() {
   setLogs(
-    getLogs().filter(
-      (l) => !(l.backendStatus === 'success' && l.emailjsStatus === 'success')
-    )
+    getLogs().filter((l) => l.emailjsStatus !== 'success')
   );
 }
