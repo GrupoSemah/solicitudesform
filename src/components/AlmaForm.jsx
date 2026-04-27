@@ -51,10 +51,7 @@ export const AlmaForm = () => {
 
     // 1. EmailJS — destino principal
     try {
-      await new Promise((resolve) => {
-        sendCustomEmail(data, judicial)
-        setTimeout(resolve, 200)
-      })
+      await sendCustomEmail(data, judicial)
       updateLog(logId, 'emailjsStatus', 'success')
     } catch {
       updateLog(logId, 'emailjsStatus', 'failed')
