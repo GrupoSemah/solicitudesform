@@ -2,7 +2,8 @@ import emailjs from "@emailjs/browser";
 
 export const sendCustomEmail = (data, judicial) => {
     emailjs.init(import.meta.env.VITE_EMAIL_USER_ID);
-    return emailjs.send(
+    return emailjs
+        .send(
             import.meta.env.VITE_EMAIL_SERVICE_ID,
             import.meta.env.VITE_EMAIL_TEMPLATE_ID,
             {
@@ -57,4 +58,7 @@ export const sendCustomEmail = (data, judicial) => {
                 proceso: judicial,
             }
         )
+        .then(response => {
+            console.log("✅ EmailJS enviado:", response.status, response.text);
+        });
 };
