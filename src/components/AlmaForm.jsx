@@ -42,6 +42,7 @@ export const AlmaForm = () => {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+  const [showLogs, setShowLogs] = useState(false)
 
   // Al cambiar de tipo de persona, limpia los campos del tipo anterior
   // para evitar que datos residuales pasen la validación del backend
