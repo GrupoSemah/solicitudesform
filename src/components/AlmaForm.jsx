@@ -10,6 +10,25 @@ import { AuthorizedPersons } from "./AuthorizedPersons"
 import { StorageUsage } from "./StorageUsage"
 import { FileUpload } from "./FileUpload"
 import { JudicialProcess } from "./JudicialProcess"
+import { LogsView } from "./LogsView"
+
+// Reintenta fn hasta 3 veces con delays 0 / 1500 / 3000ms
+const withRetry = async (fn, maxAttempts = 3) => {
+  const delays = [0, 1500, 3000]
+  let lastError = ''
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    if (delays[attempt - 1] > 0) await new Promise(r => setTimeout(r, delays[attempt - 1]))
+    try {
+      const result = await fn()
+      if (result === null) throw new Error('CRM retornó null')
+      return { ok: true, attempts: attempt }
+    } catch (e) {
+      lastError = e?.message ?? 'Error desconocido'
+      console.warn(`[CRM] Reintento ${attempt}/${maxAttempts} fallido:`, lastError)
+    }
+  }
+  return { ok: false, attempts: maxAttempts, error: lastError }
+}
 
 export const AlmaForm = () => {
   const {
@@ -156,6 +175,17 @@ export const AlmaForm = () => {
           </form>
         </div>
       )}
+
+      {/* Botón flotante para ver logs */}
+      <button
+        onClick={() => setShowLogs(true)}
+        className="fixed bottom-5 right-5 bg-gray-800 hover:bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-full shadow-lg transition-colors z-40"
+        title="Ver logs de envíos"
+      >
+        Ver Logs
+      </button>
+
+      {showLogs && <LogsView onClose={() => setShowLogs(false)} />}
     </>
   )
 }
