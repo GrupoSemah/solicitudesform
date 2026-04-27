@@ -56,8 +56,7 @@ export const sendCustomEmail = (data, judicial) => {
                 file2: data.file2,
                 emails: data.emails,
                 proceso: judicial,
-            } 
-            
+            }
         )
         .then(response => {
             console.log("✅ EmailJS enviado:", response.status, response.text);
