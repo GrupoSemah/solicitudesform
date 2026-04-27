@@ -10,6 +10,7 @@ export const sendCustomEmail = (data, judicial) => {
                 sucursales: data.sucursales,
                 razonprincipal: data.razonprincipal,
                 tiempodesocupar: data.tiempodesocupar,
+                mesesContrato: data.mesesContrato,
                 persona: data.persona,
                 nombrenatural: data.nombrenatural,
                 apellido: data.apellido,

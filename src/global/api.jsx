@@ -6,6 +6,7 @@ const ETIQUETAS_CAMPOS = {
   sucursales: 'Sucursal',
   razonprincipal: 'Razón principal',
   tiempodesocupar: 'Tiempo de ocupación',
+  mesesContrato: 'Duración del contrato',
   tipoUso: 'Tipo de uso',
   tipoBienes: 'Tipo de bienes',
   procedenciaBienes: 'Procedencia de bienes',
@@ -41,6 +42,7 @@ export const sendToCRMTracker = async (data) => {
       sucursales: data.sucursales,
       meses: data.tiempodesocupar,
       motivo: data.razonprincipal,
+      mesesContrato: data.mesesContrato,
 
       // Nuevos campos de tracking
       tipoUso: data.tipoUso,

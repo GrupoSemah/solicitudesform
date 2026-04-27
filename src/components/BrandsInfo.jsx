@@ -117,6 +117,25 @@ export const BrandsInfo = ({ register, errors, setValue }) => {
           </select>
           {errors.tiempodesocupar && <p className="text-red-500 text-xs mt-1">Por favor seleccione un tiempo estimado</p>}
         </div>
+
+        <div className="sm:col-span-2">
+          <label htmlFor="mesesContrato" className="block text-xs font-medium text-gray-600 mb-1">
+            Escoja los meses que desee mantener el contrato de arrendamiento
+            <span className="text-red-500 font-semibold">*</span>
+          </label>
+          <select
+            id="mesesContrato"
+            {...register("mesesContrato", { required: true })}
+            className={`w-full h-11 px-3 rounded-lg border ${errors.mesesContrato ? "border-red-400" : "border-gray-200"} text-sm text-gray-900 bg-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-200`}
+          >
+            <option value="">Seleccione:</option>
+            <option value="1 mes">1 mes</option>
+            <option value="3 meses">3 meses</option>
+            <option value="6 meses">6 meses</option>
+            <option value="12 meses">12 meses</option>
+          </select>
+          {errors.mesesContrato && <p className="text-red-500 text-xs mt-1">Por favor seleccione la duración del contrato</p>}
+        </div>
       </div>
     </section>
   )
