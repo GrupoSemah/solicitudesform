@@ -1,5 +1,41 @@
 import emailjs from "@emailjs/browser";
 
+// Mapeo de letras de opción a texto completo para EmailJS
+const MOTIVO_MAP = {
+  a: "Requiero ese espacio para darle otro uso",
+  b: "Empezaré una remodelación en mi inmueble",
+  c: "Necesito dejar el lugar donde están mis pertenencias (entrega de alquiler, venta, mudanza)",
+  d: "La persona (o empresa) que tiene mis pertenencias requiere entregármelas",
+}
+
+const PROCEDENCIA_MAP = {
+  a: "En mi vivienda (residencia de uso diario)",
+  b: "En mi oficina, local o negocio",
+  c: "En otro depósito o self storage",
+  d: "Están en camino (Ejemplo: Provienen del extranjero)",
+}
+
+const TIPO_USO_MAP = {
+  a: "Personales (bienes propios o familiares)",
+  b: "Comerciales (bienes de un negocio o actividad económica)",
+  c: "Ambos (una mezcla de personales y comerciales)",
+}
+
+const TIPO_BIENES_MAP = {
+  a: "Muebles y mobiliario",
+  b: "Enseres y artículos del hogar",
+  c: "Documentos y archivos",
+  d: "Mercancía, productos o inventario",
+  e: "Equipos, herramientas o tecnología",
+  f: "Artículos personales y recuerdos",
+}
+
+const MESES_MAP = {
+  a: "Entre 1 y 6 meses",
+  b: "Entre 7 y 12 meses",
+  c: "Más de 12 meses",
+}
+
 export const sendCustomEmail = (data, judicial) => {
     emailjs.init(import.meta.env.VITE_EMAIL_USER_ID);
     return emailjs
@@ -8,8 +44,8 @@ export const sendCustomEmail = (data, judicial) => {
             import.meta.env.VITE_EMAIL_TEMPLATE_ID,
             {
                 sucursales: data.sucursales,
-                razonprincipal: data.razonprincipal,
-                tiempodesocupar: data.tiempodesocupar,
+                razonprincipal: MOTIVO_MAP[data.razonprincipal] ?? data.razonprincipal,
+                tiempodesocupar: MESES_MAP[data.tiempodesocupar] ?? data.tiempodesocupar,
                 mesesContrato: data.mesesContrato,
                 persona: data.persona,
                 nombrenatural: data.nombrenatural,
@@ -47,9 +83,10 @@ export const sendCustomEmail = (data, judicial) => {
                 telefono3: data.telefono3,
                 mobile3: data.mobile3,
                 email3: data.email3,
-                tipoUso: data.tipoUso,
-                tipoBienes: data.tipoBienes,
-                procedenciaBienes: data.procedenciaBienes,
+                tipoUso: TIPO_USO_MAP[data.tipoUso] ?? data.tipoUso,
+                // Solo llega la primera opción marcada (índice 0) — SiteLink espera un único valor
+                tipoBienes: TIPO_BIENES_MAP[data.tipoBienes?.[0]] ?? data.tipoBienes?.[0] ?? "",
+                procedenciaBienes: PROCEDENCIA_MAP[data.procedenciaBienes] ?? data.procedenciaBienes,
                 nombredemandante: data.nombredemandante,
                 direcciondemandante: data.direcciondemandante,
                 telefonodemandante: data.telefonodemandante,

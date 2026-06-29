@@ -1,6 +1,42 @@
 // API client para enviar datos al CRM Tracker
 const API_URL = import.meta.env.VITE_CRM_API_URL || 'http://localhost:4000/api/v1';
 
+// Mapeo de letras de opción a texto completo (las preguntas usan valores cortos internamente)
+const MOTIVO_MAP = {
+  a: "Requiero ese espacio para darle otro uso",
+  b: "Empezaré una remodelación en mi inmueble",
+  c: "Necesito dejar el lugar donde están mis pertenencias (entrega de alquiler, venta, mudanza)",
+  d: "La persona (o empresa) que tiene mis pertenencias requiere entregármelas",
+}
+
+const PROCEDENCIA_MAP = {
+  a: "En mi vivienda (residencia de uso diario)",
+  b: "En mi oficina, local o negocio",
+  c: "En otro depósito o self storage",
+  d: "Están en camino (Ejemplo: Provienen del extranjero)",
+}
+
+const TIPO_USO_MAP = {
+  a: "Personales (bienes propios o familiares)",
+  b: "Comerciales (bienes de un negocio o actividad económica)",
+  c: "Ambos (una mezcla de personales y comerciales)",
+}
+
+const TIPO_BIENES_MAP = {
+  a: "Muebles y mobiliario",
+  b: "Enseres y artículos del hogar",
+  c: "Documentos y archivos",
+  d: "Mercancía, productos o inventario",
+  e: "Equipos, herramientas o tecnología",
+  f: "Artículos personales y recuerdos",
+}
+
+const MESES_MAP = {
+  a: "Entre 1 y 6 meses",
+  b: "Entre 7 y 12 meses",
+  c: "Más de 12 meses",
+}
+
 // Mapa de campos a etiquetas en español para mostrar errores legibles al usuario
 const ETIQUETAS_CAMPOS = {
   sucursales: 'Sucursal',
@@ -40,14 +76,15 @@ export const sendToCRMTracker = async (data) => {
     body: JSON.stringify({
       // Branch and timing info
       sucursales: data.sucursales,
-      meses: data.tiempodesocupar,
-      motivo: data.razonprincipal,
+      meses: MESES_MAP[data.tiempodesocupar] ?? data.tiempodesocupar,
+      motivo: MOTIVO_MAP[data.razonprincipal] ?? data.razonprincipal,
       mesesContrato: data.mesesContrato,
 
-      // Nuevos campos de tracking
-      tipoUso: data.tipoUso,
-      tipoBienes: data.tipoBienes,
-      procedenciaBienes: data.procedenciaBienes,
+      // Campos de tracking (resueltos a texto completo)
+      tipoUso: TIPO_USO_MAP[data.tipoUso] ?? data.tipoUso,
+      // Solo llega la primera opción marcada (índice 0) — SiteLink espera un único valor
+      tipoBienes: TIPO_BIENES_MAP[data.tipoBienes?.[0]] ?? data.tipoBienes?.[0] ?? "",
+      procedenciaBienes: PROCEDENCIA_MAP[data.procedenciaBienes] ?? data.procedenciaBienes,
 
       // Tipo de persona (viene del estado React, no del form)
       persona: data.persona,
