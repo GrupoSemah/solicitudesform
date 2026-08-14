@@ -145,12 +145,14 @@ export const AlmaForm = () => {
     setSubmitError(null)
 
     const id = Date.now().toString()
-    const payload = { ...data, persona }
+    // Se incluye "judicial" en el payload persistido para que el reenvío desde LogsView
+    // pueda recuperar el flag (vive como estado de React separado del form data)
+    const payload = { ...data, persona, judicial }
 
     saveLog({
       id,
       timestamp: new Date().toISOString(),
-      formType: 'solicitud',
+      formType: import.meta.env.VITE_FLOW_MODE === 'actualizacion' ? 'actualizacion' : 'solicitud',
       payload,
       backendStatus: 'pending',
       emailjsStatus: 'pending',
@@ -159,33 +161,50 @@ export const AlmaForm = () => {
       errorMessage: null,
     })
 
-    let backendOk = false
+    // En modo "actualizacion" NO se registra en el CRM tracker, solo se envía el correo
+    const isUpdateFlow = import.meta.env.VITE_FLOW_MODE === 'actualizacion'
+    let backendOk = isUpdateFlow
+    let emailOk = false
 
-    try {
-      await sendToCRMTracker(payload)
-      updateLog(id, { backendStatus: 'success' })
-      backendOk = true
-    } catch (error) {
-      const mensaje = error instanceof Error ? error.message : "Error desconocido"
-      console.error("❌ Error al registrar en CRM:", mensaje)
-      updateLog(id, { backendStatus: 'failed', failedStep: 'backend', errorMessage: mensaje })
-      setSubmitError(mensaje)
+    if (isUpdateFlow) {
+      updateLog(id, { backendStatus: 'skipped' })
+    } else {
+      try {
+        await sendToCRMTracker(payload)
+        updateLog(id, { backendStatus: 'success' })
+        backendOk = true
+      } catch (error) {
+        const mensaje = error instanceof Error ? error.message : "Error desconocido"
+        console.error("❌ Error al registrar en CRM:", mensaje)
+        updateLog(id, { backendStatus: 'failed', failedStep: 'backend', errorMessage: mensaje })
+        setSubmitError(mensaje)
+      }
     }
 
     try {
       await sendCustomEmail(data, judicial)
       updateLog(id, { emailjsStatus: 'success' })
+      emailOk = true
     } catch (error) {
       const mensaje = error instanceof Error ? error.message : "Error al enviar email"
-      console.error("❌ Error en EmailJS:", mensaje)
+      console.error("❌ Error al enviar correo:", mensaje)
       updateLog(id, {
         emailjsStatus: 'failed',
         failedStep: backendOk ? 'emailjs' : 'both',
         errorMessage: mensaje,
       })
+      // En modo actualización el correo es el ÚNICO canal de envío,
+      // así que su fallo debe ser visible para el usuario
+      if (isUpdateFlow) {
+        setSubmitError(mensaje)
+      }
     }
 
-    if (backendOk) {
+    // El éxito del flujo depende del canal real usado en cada modo:
+    // actualización -> solo el correo importa; solicitud -> solo el backend importa
+    const flowSucceeded = isUpdateFlow ? emailOk : backendOk
+
+    if (flowSucceeded) {
       setIsSubmitted(true)
     }
 

@@ -7,9 +7,10 @@ const STATUS_CLASS = {
   success: "bg-green-100 text-green-700",
   failed: "bg-red-100 text-red-700",
   pending: "bg-yellow-100 text-yellow-600",
+  skipped: "bg-gray-100 text-gray-500",
 }
 
-const STATUS_LABEL = { success: "Enviado", failed: "Fallido", pending: "Pendiente" }
+const STATUS_LABEL = { success: "Enviado", failed: "Fallido", pending: "Pendiente", skipped: "No aplica" }
 
 function StatusBadge({ status }) {
   return (
@@ -136,7 +137,7 @@ export function LogsView() {
                       <StatusBadge status={log.backendStatus} />
                     </div>
                     <div className="flex flex-col items-start gap-1">
-                      <span className="text-xs text-gray-400">EmailJS</span>
+                      <span className="text-xs text-gray-400">Correo</span>
                       <StatusBadge status={log.emailjsStatus} />
                     </div>
                   </div>
