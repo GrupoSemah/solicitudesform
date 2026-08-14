@@ -1,6 +1,8 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { sendCustomEmail } from "../global/email"
+import { sendToCRMTracker } from "../global/api"
+import { saveLog, updateLog } from "../global/logging"
 import { Completed } from "./completed"
 import { BrandsInfo } from "./BrandsInfo"
 import { PersonalInfo } from "./PersonalInfo"
@@ -8,19 +10,114 @@ import { AuthorizedPersons } from "./AuthorizedPersons"
 import { StorageUsage } from "./StorageUsage"
 import { FileUpload } from "./FileUpload"
 import { JudicialProcess } from "./JudicialProcess"
+import { LogsView } from "./LogsView"
+
+// Reintenta fn hasta 3 veces con delays 0 / 1500 / 3000ms
+const withRetry = async (fn, maxAttempts = 3) => {
+  const delays = [0, 1500, 3000]
+  let lastError = ''
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    if (delays[attempt - 1] > 0) await new Promise(r => setTimeout(r, delays[attempt - 1]))
+    try {
+      const result = await fn()
+      if (result === null) throw new Error('CRM retornó null')
+      return { ok: true, attempts: attempt }
+    } catch (e) {
+      lastError = e?.message ?? 'Error desconocido'
+      console.warn(`[CRM] Reintento ${attempt}/${maxAttempts} fallido:`, lastError)
+    }
+  }
+  return { ok: false, attempts: maxAttempts, error: lastError }
+}
 
 export const AlmaForm = () => {
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm({ mode: 'onBlur', shouldUnregister: true })
   const [persona, setPersona] = useState("natural")
   const [judicial, setJudicial] = useState("no")
+  // Array que preserva el orden en que el usuario marca P4 (tipoBienes)
+  // El índice 0 es siempre el primero seleccionado vigente — es el que llega al backend
+  const [tipoBienesOrden, setTipoBienesOrden] = useState([])
+
+  // Observar los campos que disparan reglas dinámicas
+  const p1 = watch("razonprincipal")
+  const p3 = watch("tipoUso")
+  const p5 = watch("tiempodesocupar")
+
+  // Registrar tipoBienes manualmente para que RHF lo valide:
+  // el valor real se setea con setValue desde handleTipoBienesChange
+  register("tipoBienes", {
+    validate: (value) =>
+      (Array.isArray(value) && value.length > 0) || "Debe seleccionar al menos una opción",
+  })
+
+  // Reglas R1–R3: P1 controla qué opciones de P2 (procedenciaBienes) se deshabilitan
+  const disabledP2 = (() => {
+    if (p1 === "a" || p1 === "b") return ["c", "d"]
+    if (p1 === "c") return ["d"]
+    if (p1 === "d") return ["a", "b"]
+    return []
+  })()
+
+  // Reglas R4–R5: P3 controla qué opciones de P4 (tipoBienes) se deshabilitan
+  const disabledP4 = (() => {
+    if (p3 === "a") return ["d"]
+    if (p3 === "b") return ["b", "f"]
+    return []
+  })()
+
+  // Reglas R6 y R7: P5 controla qué opciones de P6 (mesesContrato) se deshabilitan
+  // R6: "Entre 1 y 6 meses" (a) → deshabilita "12 meses"
+  // R7: "Más de 12 meses"   (c) → deshabilita "1 mes"
+  const disabledP6 = p5 === "a" ? ["12 meses"] : p5 === "c" ? ["1 mes"] : []
+
+  // Limpiar P2 si la opción seleccionada queda deshabilitada por un cambio en P1
+  useEffect(() => {
+    const current = watch("procedenciaBienes")
+    if (current && disabledP2.includes(current)) {
+      setValue("procedenciaBienes", "")
+    }
+  }, [p1]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Limpiar P4: si alguna opción marcada queda deshabilitada por un cambio en P3,
+  // filtrarla del array de orden para que no llegue al backend
+  useEffect(() => {
+    if (disabledP4.length === 0) return
+    setTipoBienesOrden((prev) => {
+      const siguiente = prev.filter((v) => !disabledP4.includes(v))
+      if (siguiente.length !== prev.length) {
+        // Sincronizar react-hook-form con el nuevo array filtrado
+        setValue("tipoBienes", siguiente.length > 0 ? siguiente : undefined)
+      }
+      return siguiente
+    })
+  }, [p3]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sincroniza el estado local tipoBienesOrden con react-hook-form
+  // Se llama desde StorageUsage cada vez que el usuario marca/desmarca una opción
+  const handleTipoBienesChange = (nuevoOrden) => {
+    setTipoBienesOrden(nuevoOrden)
+    // Registrar en RHF: valor válido si hay al menos un elemento, undefined si está vacío
+    // La validación custom (validate) en register se encarga del mensaje de error
+    setValue("tipoBienes", nuevoOrden.length > 0 ? nuevoOrden : undefined, { shouldValidate: true })
+  }
+
+  // Limpiar P6 si la opción seleccionada queda deshabilitada por un cambio en P5
+  useEffect(() => {
+    const current = watch("mesesContrato")
+    if (current && disabledP6.includes(current)) {
+      setValue("mesesContrato", "")
+    }
+  }, [p5]) // eslint-disable-line react-hooks/exhaustive-deps
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+  const [showLogs, setShowLogs] = useState(false)
 
   // Al cambiar de tipo de persona, limpia los campos del tipo anterior
   // para evitar que datos residuales pasen la validación del backend
@@ -47,13 +144,68 @@ export const AlmaForm = () => {
     setIsLoading(true)
     setSubmitError(null)
 
+    const id = Date.now().toString()
+    // Se incluye "judicial" en el payload persistido para que el reenvío desde LogsView
+    // pueda recuperar el flag (vive como estado de React separado del form data)
+    const payload = { ...data, persona, judicial }
+
+    saveLog({
+      id,
+      timestamp: new Date().toISOString(),
+      formType: import.meta.env.VITE_FLOW_MODE === 'actualizacion' ? 'actualizacion' : 'solicitud',
+      payload,
+      backendStatus: 'pending',
+      emailjsStatus: 'pending',
+      failedStep: null,
+      retryCount: 0,
+      errorMessage: null,
+    })
+
+    // En modo "actualizacion" NO se registra en el CRM tracker, solo se envía el correo
+    const isUpdateFlow = import.meta.env.VITE_FLOW_MODE === 'actualizacion'
+    let backendOk = isUpdateFlow
+    let emailOk = false
+
+    if (isUpdateFlow) {
+      updateLog(id, { backendStatus: 'skipped' })
+    } else {
+      try {
+        await sendToCRMTracker(payload)
+        updateLog(id, { backendStatus: 'success' })
+        backendOk = true
+      } catch (error) {
+        const mensaje = error instanceof Error ? error.message : "Error desconocido"
+        console.error("❌ Error al registrar en CRM:", mensaje)
+        updateLog(id, { backendStatus: 'failed', failedStep: 'backend', errorMessage: mensaje })
+        setSubmitError(mensaje)
+      }
+    }
+
     try {
       await sendCustomEmail(data, judicial)
-      setIsSubmitted(true)
+      updateLog(id, { emailjsStatus: 'success' })
+      emailOk = true
     } catch (error) {
       const mensaje = error instanceof Error ? error.message : "Error al enviar email"
-      console.error("Error en EmailJS:", mensaje)
-      setSubmitError(mensaje)
+      console.error("❌ Error al enviar correo:", mensaje)
+      updateLog(id, {
+        emailjsStatus: 'failed',
+        failedStep: backendOk ? 'emailjs' : 'both',
+        errorMessage: mensaje,
+      })
+      // En modo actualización el correo es el ÚNICO canal de envío,
+      // así que su fallo debe ser visible para el usuario
+      if (isUpdateFlow) {
+        setSubmitError(mensaje)
+      }
+    }
+
+    // El éxito del flujo depende del canal real usado en cada modo:
+    // actualización -> solo el correo importa; solicitud -> solo el backend importa
+    const flowSucceeded = isUpdateFlow ? emailOk : backendOk
+
+    if (flowSucceeded) {
+      setIsSubmitted(true)
     }
 
     setIsLoading(false)
@@ -71,11 +223,18 @@ export const AlmaForm = () => {
             </div>
 
             <div className="px-6 sm:px-8 py-6 border-b border-gray-100">
-              <BrandsInfo register={register} errors={errors} setValue={setValue} />
+              <BrandsInfo register={register} errors={errors} setValue={setValue} disabledP6={disabledP6} />
             </div>
 
             <div className="px-6 sm:px-8 py-6 border-b border-gray-100">
-              <StorageUsage register={register} errors={errors} />
+              <StorageUsage
+                register={register}
+                errors={errors}
+                disabledP2={disabledP2}
+                disabledP4={disabledP4}
+                tipoBienesOrden={tipoBienesOrden}
+                onTipoBienesChange={handleTipoBienesChange}
+              />
             </div>
 
             <div className="px-6 sm:px-8 py-6 border-b border-gray-100">
@@ -118,6 +277,17 @@ export const AlmaForm = () => {
           </form>
         </div>
       )}
+
+      {/* Botón flotante para ver logs */}
+      <button
+        onClick={() => setShowLogs(true)}
+        className="fixed bottom-5 right-5 bg-gray-800 hover:bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-full shadow-lg transition-colors z-40"
+        title="Ver logs de envíos"
+      >
+        Ver Logs
+      </button>
+
+      {showLogs && <LogsView onClose={() => setShowLogs(false)} />}
     </>
   )
 }
